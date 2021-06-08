@@ -8,4 +8,10 @@ var upload = connectMultiparty({ uploadDir: './uploads/users'});
 
 var api = express.Router();
 
+//FUNCIONES PARA CUALQUIER TIPO DE ROL
+api.post('/signUp', userController.signUp);
+api.post('/login', userController.login);
+api.put('/updateUser/:id', [mdAuth.ensureAuth], userController.updateUser);
+api.put('/removeUser/:id', mdAuth.ensureAuth, userController.removeUser);
+
 module.exports = api;
