@@ -3,6 +3,8 @@
 var express = require('express');
 var teamController = require('../controllers/team.controller');
 var mdAuth = require('../middleware/authenticated');
+var connectMultiparty = require('connect-multiparty');
+var upload = connectMultiparty({ uploadDir: './uploads/teams'});
 
 var api = express.Router();
 
