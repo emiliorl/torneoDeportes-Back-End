@@ -13,5 +13,12 @@ api.post('/signUp', userController.signUp);
 api.post('/login', userController.login);
 api.put('/updateUser/:id', [mdAuth.ensureAuth], userController.updateUser);
 api.put('/removeUser/:id', mdAuth.ensureAuth, userController.removeUser);
+api.put('/:id/uploadImage', [mdAuth.ensureAuth, upload], userController.uploadImage);
+api.get('/getImage/:fileName', [upload], userController.getImage);
+api.post('/createUserByAdmin/:id', [mdAuth.ensureAuth, mdAuth.validRolAdmin], userController.creatUser_ByAdmin),
+api.get('/listUsers', [mdAuth.ensureAuth, mdAuth.validRolAdmin], userController.listUser),
+api.post('/optionsOfAdmin', userController.validOptionsOfAdmin);
+api.put('/editUserByAdmin/:id/:idA', [mdAuth.ensureAuth, mdAuth.validRolAdmin], userController.EditUser_ByAdmin);
+api.put('/DeleteUserByAdmin/:id/:idA', [mdAuth.ensureAuth, mdAuth.validRolAdmin], userController.DeleteUser_ByAdmin);
 
 module.exports = api;
