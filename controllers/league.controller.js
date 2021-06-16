@@ -1,7 +1,10 @@
 'use strict'
 
 var User = require('../models/user.model');
-var League = require('../models/leauge.model');
+var League = require('../models/league.model');
+
+var fs = require('fs');
+var path = require('path');
 
 function createLeague(req, res){
     let userId = req.params.id;
@@ -10,7 +13,7 @@ function createLeague(req, res){
     if(userId != req.user.sub){
         return res.status(401).send({message:'No tienes permiso para agregar a la liga'});
     }else{
-        if(params.nameLeague){
+        if(params.nameLeague && params.startingDate){
             params.nameLeague = params.nameLeague.toLowerCase();
             League.findOne({nameLeague : params.nameLeague}, (err, leagueFind)=>{
                 if(err){
@@ -20,6 +23,7 @@ function createLeague(req, res){
                 }else{
                     let league = new League();
                     league.nameLeague = params.nameLeague;
+                    league.startingDate = params.startingDate;
                     league.user = userId;
                     league.save((err, leagueSaved) => {
                         if(err){
@@ -76,7 +80,7 @@ function deleteLeague(req, res){
     }
 }
 
-function updateService(req, res){
+function updateLeague(req, res){
     let userId = req.params.id;
     let leagueId = req.params.idL;
     let update = req.body;
@@ -165,7 +169,7 @@ function getLeague(req,res){
 module.exports = {
     createLeague,
     deleteLeague,
-    updateService,
+    updateLeague,
     listLeagues,
     listLeaguesUser,
     getLeague

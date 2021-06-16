@@ -11,7 +11,7 @@ var path = require('path');
 function adminInit(req, res){
     let admin = new User();
 
-    admin.username = 'ADMIN';
+    admin.username = 'admin';
     admin.password = 'deportes123';
     admin.rol = 'ADMIN';
 

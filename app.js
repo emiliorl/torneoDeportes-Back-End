@@ -2,7 +2,11 @@
 
 var express = require('express');
 var bodyParser =  require('body-parser');
-var userRoute = require('./routes/user.routes');
+var userRoute = require('./routes/user.route');
+var leagueRoute = require('./routes/league.route');
+var matchRoute = require('./routes/match.route');
+var playerRoute = require('./routes/player.route');
+var teamRoute = require('./routes/team.route');
 
 var app = express();
 
@@ -18,5 +22,9 @@ app.use((req, res, next) => {
 });
 
 app.use('/v1', userRoute);
+app.use('/v1', leagueRoute);
+app.use('/v1', teamRoute);
+app.use('/v1', playerRoute);
+app.use('/v1', matchRoute);
 
 module.exports = app;

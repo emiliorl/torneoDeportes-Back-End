@@ -2,18 +2,22 @@
 
 var Team = require('../models/team.model');
 var User = require('../models/user.model');
-var League = require('../models/leauge.model');
+var League = require('../models/league.model');
 var bcrypt = require('bcrypt-nodejs');
+
+var fs = require('fs');
+var path = require('path');
 
 function createTeam(req, res){
     var userId = req.params.userId;
     var leagueId = req.params.leagueId;
     var params = req.body;
+    params.nameTeam = params.nameTeam.toLowerCase();
 
     if(userId != req.user.sub){
         return res.status(400).send({message:'No posees permisos para hacer esta accion'});
     }else{
-        League.findOne({_id : leagueId}, (err, leagueFind)=>{
+        League.findOne({_id: leagueId, user: userId}, (err, leagueFind)=>{
             if(err){
                 return res.status(500).send({message: 'Error general al buscar la liga'});
             }else if(leagueFind){
@@ -36,7 +40,15 @@ function createTeam(req, res){
                             if(err){
                                 return res.status(500).send({message: 'Error general al guardar el equipo'});
                             }else if(teamSaved){
-                                return res.send({message: 'El equipo se guardo satisfactoriamente', teamSaved});
+                                League.findByIdAndUpdate(leagueId, {$push:{teams: teamSaved._id}}, {new: true}).populate('teams').exec((err, teamPush)=>{
+                                    if(err){
+                                        return res.status(500).send({message: 'Error general al agregar el equipo a la liga'})
+                                    }else if(teamPush){
+                                        return res.send({message: 'El equipo se guardo satisfactoriamente', teamPush});
+                                    }else{
+                                        return res.status(500).send({message: 'Error al agregar el equipo a la liga'})
+                                    }
+                                })
                             }else{
                                 return res.send({message: 'No se pudo agregar el equipo con exito'});
                             }
