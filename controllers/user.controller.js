@@ -293,7 +293,7 @@ function creatUser_ByAdmin(req, res){
                             user.password = passwordHash;
                             user.name = params.name;
                             user.lastname = params.lastname;
-                            user.username = params.username;
+                            user.username = params.username.toLowerCase();
                             user.rol = params.rol;
                             user.phone = params.phone; 
                             user.email = params.email;
@@ -344,9 +344,11 @@ function validOptionsOfAdmin(req, res){
                     if(err){
                         return res.status(500).send({message:'Error al comparar contraseñas'});
                     }else if(equalsPassword){
-                        return res.send({message:'Opciones avanzadas disponibles'});                        
+                        let x = true;
+                        return res.send({message:'Opciones avanzadas disponibles',x});                        
                     }else{
-                        return res.status(404).send({message:'No hay coincidencias en la password, opciones avanzadas no disponibles'});
+                        let x = false;
+                        return res.status(404).send({message:'No hay coincidencias en la password, opciones avanzadas no disponibles',x});
                     }
                 })
             }else{
@@ -377,19 +379,15 @@ function EditUser_ByAdmin(req, res){
                     if(err){
                         return res.status(500).send({message:'Error al buscar usuario'});
                     }else if(userFind){
-                        if(userFind._id == req.user.sub){
-                            User.findByIdAndUpdate(userId, update, {new: true}, (err, userUpdated)=>{
-                                if(err){
-                                    return res.status(500).send({message: 'Error general al actualizar'});
-                                }else if(userUpdated){
-                                    return res.send({message: 'Usuario actualizado', userUpdated});
-                                }else{
-                                    return res.send({message: 'No se pudo actualizar al usuario'});
-                                }
-                            })
-                        }else{
-                            return res.send({message: 'Nombre de usuario ya en uso'});
-                        }
+                        User.findByIdAndUpdate(userId, update, {new: true}, (err, userUpdated)=>{
+                            if(err){
+                                return res.status(500).send({message: 'Error general al actualizar'});
+                            }else if(userUpdated){
+                                return res.send({message: 'Usuario actualizado', userUpdated});
+                            }else{
+                                return res.send({message: 'No se pudo actualizar al usuario'});
+                            }
+                        })
                     }else{
                         User.findByIdAndUpdate(userId, update, {new: true}, (err, userUpdated) => {
                             if(err){
