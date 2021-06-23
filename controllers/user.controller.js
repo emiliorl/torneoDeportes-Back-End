@@ -62,7 +62,7 @@ function signUp(req, res){
                         user.password = passwordHash;
                         user.name = params.name;
                         user.lastname = params.lastname;
-                        user.username = params.username;
+                        user.username = params.username.toLowerCase();
                         user.rol = "USER";
                         user.phone = params.phone; 
                         user.email = params.email;
