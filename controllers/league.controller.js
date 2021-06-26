@@ -13,7 +13,7 @@ function createLeague(req, res){
     if(userId != req.user.sub){
         return res.status(401).send({message:'No tienes permiso para agregar a la liga'});
     }else{
-        if(params.nameLeague && params.startingDate){
+        if(params.nameLeague && params.startingDate && params.share){
             params.nameLeague = params.nameLeague.toLowerCase();
             League.findOne({nameLeague : params.nameLeague}, (err, leagueFind)=>{
                 if(err){
@@ -25,6 +25,7 @@ function createLeague(req, res){
                     league.nameLeague = params.nameLeague;
                     league.startingDate = params.startingDate;
                     league.user = userId;
+                    league.share = params.share;
                     league.save((err, leagueSaved) => {
                         if(err){
                             return res.status(400).send({message:'Error general al intentar crear la liga'});
@@ -94,7 +95,7 @@ function updateLeague(req, res){
             League.findOne({nameLeague: update.nameLeague}, (err, leagueFind) => {
                 if(err){
                     return res.status(500).send({message:'Error al buscar liga'});
-                }else if(leagueFind){
+                }else if(leagueFind && leagueFind._id != leagueId){
                     return res.send({message: 'Ya existente una liga con este nombre'})
                 }else{
                     League.findOneAndUpdate({_id: leagueId, user:userId}, update, {new: true}, (err, leagueUpdate) => {
@@ -124,7 +125,22 @@ function updateLeague(req, res){
 
 function listLeagues(req,res){
 
-    League.find({}).select("-__v").exec((err, leagueFind)=>{
+    League.find({share: 'public'}).select("-__v").exec((err, leagueFind)=>{
+        if(err){
+            return res.status(500).send({message: 'Error general al obtener las ligas'});
+        }else if(leagueFind){
+            return res.send({message: 'Ligas encontradas', leagueFind});
+        }else{
+            return res.status(404).send({message:'No se encontraron ligas'});
+        }
+    });
+
+}
+
+function listMyLeagues(req,res){
+    let userId = req.params.id;
+
+    League.find({user: userId}).select("-__v").exec((err, leagueFind)=>{
         if(err){
             return res.status(500).send({message: 'Error general al obtener las ligas'});
         }else if(leagueFind){
@@ -172,5 +188,6 @@ module.exports = {
     updateLeague,
     listLeagues,
     listLeaguesUser,
-    getLeague
+    getLeague,
+    listMyLeagues
 }
