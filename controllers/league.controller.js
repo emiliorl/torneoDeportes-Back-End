@@ -59,7 +59,7 @@ function deleteLeague(req, res){
     if(userId != req.user.sub){
         return res.status(400).send({message:'No posees permisos para eliminar la liga'});
     }else{
-        User.findOneAndUpdate({_id: userId, leagues: leagueId},
+        User.findOneAndUpdate({_id: userId},
             {$pull:{leagues: leagueId}}, {new:true}, (err, leaguePull)=>{
                 if(err){
                     return res.status(500).send({message: 'Error general al eliminar la liga del usuario'});
@@ -182,6 +182,66 @@ function getLeague(req,res){
 
 }
 
+function uploadImage(req, res){
+    var userId = req.params.id;
+    var leagueId = req.params.idL;
+    var fileName;
+
+    if(userId != req.user.sub){
+        res.status(401).send({message:'No tienes permisos'});
+    }else{
+        // Identifica si vienen archivos
+        if(req.files.imageLeague){
+            
+            //ruta en la que llega la imagen
+            var filePath = req.files.imageLeague.path;
+
+            //fileSplit separa palabras, direcciones, etc
+            // Separar en jerarquia la ruta de la imagen alt + 92 "\\   alt + 124 ||"
+            var fileSplit = filePath.split('\\');
+            //filePath: document/image/mi-imagen.jpg   0/1/2
+            var fileName = fileSplit[2];
+
+            var extension = fileName.split('\.');
+            var fileExt = extension[1];
+            if( fileExt == 'png' || fileExt == 'jpg' || fileExt == 'jpeg' || fileExt == 'gif'){
+                League.findOneAndUpdate({_id:leagueId, user: userId}, {imageLeague: fileName}, {new: true}, (err, leagueUpdate) => {
+                    if(err){
+                        res.status(500).send({message:'Error general al subir la imagen'});
+                    }else if(leagueUpdate){
+                        res.send({league: leagueUpdate, imageLeague: leagueUpdate.imageLeague});
+                    }else{
+                        res.status(401).send({message:'No se ha podido actualizar la imagen de portada de la liga'});
+                    }
+                });
+            }else{
+                fs.unlink(filePath, (err) =>{
+                    if(err){
+                        res.status(500).send({message:'Extension no valida y error al eliminar el archivo'});
+                    }else{
+                        res.send({message:'Extension no valida'});
+                    }
+                })
+            }
+        }else{
+            res.status(404).send({message:'No has enviado una imagen a subir'});
+        }
+    }
+}
+
+function getImage(req, res){
+    var fileName = req.params.fileName;
+    var pathFile = './uploads/leagues/' + fileName;
+
+    fs.exists(pathFile, (exists) => {
+        if(exists){
+            res.sendFile(path.resolve(pathFile));
+        }else{
+            res.status(404).send({message:'Imagen inexistente'})
+        }
+    })
+}
+
 module.exports = {
     createLeague,
     deleteLeague,
@@ -189,5 +249,7 @@ module.exports = {
     listLeagues,
     listLeaguesUser,
     getLeague,
-    listMyLeagues
+    listMyLeagues,
+    uploadImage,
+    getImage
 }
