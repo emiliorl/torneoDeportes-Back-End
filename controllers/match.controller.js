@@ -8,7 +8,7 @@ function createMatch(req, res){
     var userId = req.params.idUser;
     var leagueId = req.params.idLeague;
     var match = [];
-    var count = 1
+    var count = 1;
 
     if(userId != req.user.sub){
         return res.status(400).send({message:'No posees permisos para hacer esta accion'});
@@ -271,7 +271,68 @@ function createMatch(req, res){
             }
         }
         console.log(matchN); */
+    
+        function searchMatch(req, res){
+            var params = req.body;
+        
+            if(params.search){
+                Match.find({$or:[{location: params.search},
+                                {date: params.search},
+                                {teams: params.search}]}, (err, resultSearch)=>{
+                                    if(err){
+                                        return res.status(500).send({message: 'Error general'});
+                                    }else if(resultSearch){
+                                        return res.send({message: 'Coincidencias encontradas: ', resultSearch});
+                                    }else{
+                                        return res.status(403).send({message: 'Búsqueda sin coincidencias'});
+                                    }
+                                })
+            }else{
+                return res.status(403).send({message: 'Ingrese datos en el campo de búsqueda'});
+            }
+        }
+        
+        function updateMatch(req, res) {
+            var matchId = req.params.idMatch;
+            var leagueId = req.params.idLeague;
+            let update = req.body;
+        
+                if(update.date && update.location){
+                    Match.findById(matchId, (err, matchFind)=>{
+                        if(err){
+                            return res.status(500).send({message: 'Error general al actualizar'});
+                        }else if(matchFind){
+                            League.findOne({_id: leagueId, match: matchId}, (err, leagueFind)=>{
+                                if(err){
+                                    return res.status(500).send({message: 'Error general'});
+                                }else if(leagueFind){
+                                    Match.findByIdAndUpdate(matchId, update, {new: true}, (err, matchUpdated)=>{
+                                        if(err){
+                                            return res.status(500).send({message: 'Error general en la actualización'});
+                                        }else if(matchUpdated){
+                                            return res.send({message: 'Match actualizado', matchUpdated});
+                                        }else{
+                                            return res.status(404).send({message: 'Match no actualizado'});
+                                        }
+                                    })
+                                }else{
+                                    return res.status(404).send({message: 'League no existente'})
+                                }
+                            })
+                        }else{
+                            return res.status(404).send({message: 'Match a actualizar inexistente'});
+                        }
+                    })
+                }else{
+                    return res.status(404).send({message: 'Por favor ingresa los datos mínimos para actualizar'});
+             }
+        }
+
+        /*Falta realizar prueba y hacer el listar */
+        
 
 module.exports = {
-    createMatch
+    createMatch,
+    searchMatch,
+    updateMatch
 }
