@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 
 var matchSchema = Schema({
     teams: [{type: Schema.ObjectId, ref: "team"}, {goals: Number}],
-    winner: {type: Schema.ObjectId, ref: "team"},
+    winner: {type: Schema.ObjectId, ref: "team"}, 
     loser: {type: Schema.ObjectId, ref: "team"},
     location: String,
     date: Date

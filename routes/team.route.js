@@ -16,5 +16,5 @@ api.post('/getTeam', teamController.getTeam);
 api.put('/:userId/uploadImage/:teamId', [mdAuth.ensureAuth, upload], teamController.uploadImage);
 api.get('/getImage/:fileName', [upload], teamController.getImage);
 
-
+    
 module.exports = api; 
