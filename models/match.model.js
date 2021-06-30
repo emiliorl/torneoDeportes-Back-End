@@ -7,6 +7,7 @@ var matchSchema = Schema({
     teams: [{type: Schema.ObjectId, ref: "team"}, {goals: Number}],
     winner: {type: Schema.ObjectId, ref: "team"}, 
     loser: {type: Schema.ObjectId, ref: "team"},
+    league: {type: Schema.ObjectId, ref: "league"},
     location: String,
     date: Date
 });
