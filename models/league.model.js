@@ -4,12 +4,14 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var leaugeSchema = Schema({
-    nameLeauge: String,
-    descriptionLeauge: String,
+    nameLeague: String,
+    descriptionLeague: String,
     startingDate: Date,
     user: {type: Schema.ObjectId, ref: "user"},
-    teams: [ {type: Schema.ObjectId, ref: "team"}, {points: Number}],
-    matches: [{type: Schema.ObjectId, ref: "match"}]
+    share: String,
+    teams: [ {type: Schema.ObjectId, ref: "team"}],
+    matches: [{type: Schema.ObjectId, ref: "match"}],
+    imageLeague: String
 });
 
 module.exports = mongoose.model('league', leaugeSchema);

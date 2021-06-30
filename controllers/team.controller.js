@@ -170,7 +170,9 @@ function deleteTeam(req, res){
 }
 
 function listTeam(req, res){
-    Team.find({}).exec((err, teamsFind)=>{
+    let idLeague = req.params.idLeague;
+
+    Team.find({league: idLeague}).sort({"points": "desc"}).exec((err, teamsFind)=>{
         if(err){
             return res.status(500).send({message: 'Error general al obtener los equipos'});
         }else if(teamsFind){
@@ -195,13 +197,32 @@ function getTeam(req, res){
             if(err){
                 return res.status(500).send({message: 'Error general al obtener los equipos'});
             }else if(resultSerarch){
-
+                return res.send({message: 'Equipos encontrados', resultSerarch})
             }else{
                 return res.status(404).send({message:'No se encontraron coincidencias'});
             }
         });
     }else{
         return res.status(404).send({message:'No se encontraron equipos registrados'});
+    }
+
+}
+
+function getTeamById(req, res){
+    var teamId = req.params.teamId;
+
+    if(teamId){
+        Team.findById(teamId, (err,  resultSerarch)=>{
+            if(err){
+                return res.status(500).send({message: 'Error general al obtener el equipo'});
+            }else if(resultSerarch){
+                return res.send({message: 'Equipo encontrado', resultSerarch})
+            }else{
+                return res.status(404).send({message:'No se encontraron coincidencias'});
+            }
+        });
+    }else{
+        return res.status(404).send({message:'No se encontraro el equipo'});
     }
 
 }
@@ -272,5 +293,6 @@ module.exports = {
     listTeam,
     getTeam,
     uploadImage,
-    getImage
+    getImage,
+    getTeamById
 }
