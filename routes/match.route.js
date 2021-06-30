@@ -8,5 +8,7 @@ var api = express.Router();
 
 api.post('/:idUser/:idLeague/createMatches', mdAuth.ensureAuth, matchController.createMatch);
 api.get('/:idLeague/listMatches', matchController.listMatches);
+api.put('/:idMatch/:idLeague/updateMatch', mdAuth.ensureAuth, matchController.updateMatch);
+api.post('/search', mdAuth.ensureAuth, matchController.searchMatch);
 
 module.exports = api;
