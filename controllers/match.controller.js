@@ -356,7 +356,7 @@ function listMatches(req, res){
 
 module.exports = {
     createMatch,
-    listMatches
-    updateMatch
-    searchMatch,
+    listMatches,
+    updateMatch,
+    searchMatch
 }
