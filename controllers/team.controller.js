@@ -29,7 +29,7 @@ function createTeam(req, res){
                     }else{
                         let team = new Team();
                         team.nameTeam = params.nameTeam;
-                        team.couch = params.couch;
+                        team.coach = params.coach;
                         team.nameStadium = params.nameStadium;
                         team.adress = params.adress;
                         team.country = params.country;
@@ -66,27 +66,27 @@ function updateTeam(req, res){
     var userId = req.params.userId;
     var leagueId = req.params.leagueId;
     var teamId = req.params.teamId;
-    var update = req.params;
+    var update = req.body;
 
     if(userId != req.user.sub){
         return res.status(400).send({message:'No posees permisos para hacer esta accion'});
     }else{
-        League.findOne({_id : leagueId}, (res, leagueFind)=>{
+        League.findOne({_id : leagueId}, (err, leagueFind)=>{
             if(err){
                 return res.status(500).send({message: 'Error general al buscar la liga'});
             }else if(leagueFind){
-                Team.findOne({_id : teamId}, (err, teamFind)=>{
+                Team.findById(teamId, (err, teamFind)=>{
                     if(err){
                         return res.status(500).send({message: 'Error general al buscar el equipo'});
                     }else if(teamFind.league == leagueId){
-                        if(update.nameTeam){
+                        if(update.nameTeam != teamFind.nameTeam){
                             Team.findOne({nameTeam : update.nameTeam}, (err, existingTeam)=>{
                                 if(err){
                                     return res.status(500).send({message: 'Error general al buscar el nombre del equipo'});
                                 }else if(existingTeam){
                                     return res.send({message: 'Este nombre del equipo ya esta en uso'})
                                 }else{
-                                    Team.findByIdAndUpdate(teamId, update, (err, teamUpdated)=>{
+                                    Team.findOneAndUpdate({_id : teamId}, update,{new: true}, (err, teamUpdated)=>{
                                         if(err){
                                             return res.status(500).send({message: 'Error general al actualizar el equipo'});
                                         }else if(teamUpdated){
@@ -99,6 +99,7 @@ function updateTeam(req, res){
                             });
                         }else{
                             Team.findByIdAndUpdate(teamId, update, (err, teamUpdated)=>{
+                                console.log(update);
                                 if(err){
                                     return res.status(500).send({message: 'Error general al actualizar el equipo'});
                                 }else if(teamUpdated){
@@ -112,6 +113,7 @@ function updateTeam(req, res){
                         return res.status(404).send({message:'No se encontro el equipo a actualizar'});
                     }
                 });
+                
             }else{
                 return res.status(404).send({message:'No se encontro la liga deseada'});
             }
@@ -121,6 +123,7 @@ function updateTeam(req, res){
 
 
 function deleteTeam(req, res){
+    
     var userId = req.params.userId;
     var leagueId = req.params.leagueId;
     var teamId = req.params.teamId;
@@ -129,40 +132,49 @@ function deleteTeam(req, res){
     if(userId != req.user.sub){
         return res.status(400).send({message:'No posees permisos para hacer esta accion'});
     }else{
-        if(params.passwordAdmin){
-            Team.findById(teamId, (err, teamFind)=>{
+        if(params.password){
+            User.findById(userId, (err, userFind) => {
                 if(err){
-                    return res.status(500).send({message: 'Error general al buscar el equipo'});
-                }else if(teamFind.league == leagueId){
-                    User.findOne({_id : userId}, (err, userFind)=>{
+                    return res.status(500).send({message:'Error al buscar equipo'});
+                }else if(userFind){
+                    League.findOne({_id: leagueId}, (err, leagueFind) => {
                         if(err){
-                            return res.status(500).send({message: 'Error general al buscar al usuario'});
-                        }else if(userFind){
-                            bcrypt.compare(params.passwordAdmin, userFind.password, (err, equalsPassword)=>{
+                            return res.status(500).send({message:'Error al buscar la liga'});
+                        }else if(leagueFind){
+                            bcrypt.compare(params.password, userFind.password, (err, equalsPassword) => {
                                 if(err){
-                                    return res.status(500).send({message:'Error general al comparar contraseñas'});
+                                    return res.status(500).send({message:'Error al comparar contraseñas'});
                                 }else if(equalsPassword){
-                                    Team.findOneAndRemove({_id : teamId}, (err, teamRemoved)=>{
+                                    League.findByIdAndUpdate({_id: leagueId, teams: teamId}, {$pull:{teams : teamId}}, {new: true}, (err, leagueUpdated)=>{
                                         if(err){
-                                            return res.status(500).send({message: 'Error general al eliminar el equipo'});
-                                        }else if(teamRemoved){
-                                            return res.send({message: 'El equipo fue eliminado', teamRemoved});
+                                            return res.status(500).send({message:'Error general al actualizar la liga'});
+                                        }else if(leagueUpdated){
+                                            Team.findByIdAndRemove({_id: teamId}, (err, teamRemoved) => {
+                                                if(err){
+                                                    return res.status(500).send({message:'Error al eliminar el equipo'});
+                                                }else if(teamRemoved){
+                                                    return res.send({message: 'El equipo fue eliminado', teamRemoved});
+                                                }else{
+                                                    return res.status(404).send({message:'No se pudo eliminar el equipo ya fue eliminado'});
+                                                }
+                                            })
                                         }else{
-                                            return res.status(404).send({message:'No se pudo eliminar el equipo deseado'});
+                                            return res.status(404).send({message:'No se pudo eliminar el equipo de la liga'});
                                         }
-                                    });
+                                    })
+                                    
                                 }else{
-                                    return res.status(404).send({message:'No hay coincidencias para la password'});
+                                    return res.status(404).send({message:'No hay coincidencias en la password'});
                                 }
-                            });
+                            })
                         }else{
-                            return res.status(404).send({message:'Usuario no encontrado'});
+                            return res.status(404).send({message:'Tu password es incorrecta'});
                         }
                     })
                 }else{
-                    return res.status(400).send({message:'No se logro encontrar el equipo'});        
+                    return res.status(404).send({message:'No se encontro el equipo'});
                 }
-            })
+            })                        
         }else{
             return res.status(400).send({message:'No olvides colocar tu password de administrador'});
         }
@@ -188,7 +200,7 @@ function getTeam(req, res){
 
     if(params.search){
         Team.find({$or : [{nameTeam : params.search},
-                          {couch : params.search},
+                          {coach : params.search},
                           {nameStadium : params.search},
                           {country : params.search},
                           {state : params.search}, 
@@ -229,6 +241,7 @@ function getTeamById(req, res){
 
 function uploadImage(req, res){
     var userId = req.params.userId;
+    var leagueId = req.params.leagueId;
     var teamId = req.params.teamId;
     var fileName;
 
@@ -236,10 +249,10 @@ function uploadImage(req, res){
         res.status(401).send({message:'No tienes permisos'});
     }else{
         // Identifica si vienen archivos
-        if(req.files){
+        if(req.files.imageTeam){
             //ruta en la que llega la imagen
-            var filePath = req.files.image.path;
-
+            var filePath = req.files.imageTeam.path;
+            
             //fileSplit separa palabras, direcciones, etc
             // Separar en jerarquia la ruta de la imagen alt + 92 "\\   alt + 124 ||"
             var fileSplit = filePath.split('\\');
@@ -249,11 +262,11 @@ function uploadImage(req, res){
             var extension = fileName.split('\.');
             var fileExt = extension[1];
             if( fileExt == 'png' || fileExt == 'jpg' || fileExt == 'jpeg' || fileExt == 'gif'){
-                Team.findByIdAndUpdate(teamId, {image: fileName}, {new: true}, (err, teamUpdate) => {
+                Team.findOneAndUpdate({_id: teamId, league:leagueId}, {imageTeam: fileName}, {new: true}, (err, teamUpdate) => {
                     if(err){
                         res.status(500).send({message:'Error general en imagen'});
                     }else if(teamUpdate){
-                        res.send({team: teamUpdate, teamImage: teamUpdate.image});
+                        res.send({team: teamUpdate, imageTeam: teamUpdate.imageTeam});
                     }else{
                         res.status(401).send({message:'No se ha podido actualizar'});
                     }
@@ -273,7 +286,7 @@ function uploadImage(req, res){
     }
 }
 
-function getImage(){
+function getImage(req, res){
     var fileName = req.params.fileName;
     var pathFile = './uploads/teams/' + fileName;
 

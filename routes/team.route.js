@@ -14,8 +14,8 @@ api.post('/:userId/deleteTeam/:leagueId/:teamId', [mdAuth.ensureAuth, mdAuth.val
 api.get('/:idLeague/listTeams', teamController.listTeam);
 api.get('/:teamId/getTeam', teamController.getTeamById);
 api.post('/getTeam', teamController.getTeam);
-api.put('/:userId/uploadImage/:teamId', [mdAuth.ensureAuth, upload], teamController.uploadImage);
-api.get('/getImage/:fileName', [upload], teamController.getImage);
+api.put('/:userId/:leagueId/uploadImage/:teamId', [mdAuth.ensureAuth, upload], teamController.uploadImage);
+api.get('/getImageTeam/:fileName', [upload], teamController.getImage);
 
-
+    
 module.exports = api; 

@@ -2,6 +2,7 @@
 
 var Team = require('../models/team.model');
 var User = require('../models/user.model');
+var Player = require('../models/player.model');
 
 function createPlayer(req, res){
     let userId = req.params.id;
@@ -56,11 +57,11 @@ function createPlayer(req, res){
 
 function updatePlayer(req, res){
     let userId = req.params.id;
-    let playerId = req.params.idL;
+    let playerId = req.params.idP;
     let update = req.body;
 
     if(userId != req.user.sub){
-        return res.status(404).send({message:'No tienes permiso para actualizar jugadores'});
+        return res.status(404).send({message:'No posees permisos para eliminar el jugador'});
     }else{
         if(update.name){
             update.name = update.name.toLowerCase();
@@ -68,7 +69,7 @@ function updatePlayer(req, res){
             Player.findOne({name: update.name}, (err, playerFind) => {
                 if(err){
                     return res.status(500).send({message:'Error al encontrar jugadores'});
-                }else if(playerFind){
+                }else if(playerFind && playerFind._id != playerId){
                     return res.send({message: 'Ya hay un jugador con ese nombre'})
                 }else{
                     Player.findOneAndUpdate({_id: playerId, user:userId}, update, {new: true}, (err, playerUpdate) => {
@@ -77,7 +78,7 @@ function updatePlayer(req, res){
                         }else if(playerUpdate){
                             return res.status(200).send({message:'Jugador actualizado', playerUpdate});
                         }else{
-                            return res.status(404).send({message:'No se pudo actualizar el jugador'});
+                            return res.status(404).send({message:'No se puede actualizar el jugador'});
                         }
                     })
                 }
@@ -98,27 +99,27 @@ function updatePlayer(req, res){
 
 function deletePlayer(req, res){
     var userId = req.params.id;
-    var playerId = req.params.idL;
+    var playerId = req.params.idP;
 
     if(userId != req.user.sub){
-        return res.status(400).send({message:'No posees permisos para eliminar la liga'});
+        return res.status(400).send({message:'No posees permisos para eliminar el jugador'});
     }else{
-        User.findOneAndUpdate({_id: userId, players: playerId},
+        User.findOneAndUpdate({_id: userId},
             {$pull:{players: playerId}}, {new:true}, (err, playerPull)=>{
                 if(err){
-                    return res.status(500).send({message: 'Error general al eliminar la liga del usuario'});
+                    return res.status(500).send({message: 'Error general al eliminar el jugador del usuario'});
                 }else if(playerPull){
                     Player.findByIdAndRemove({_id: playerId},(err, playerRemoved) => {
                         if(err){
-                            return res.status(500).send({message:'Error al eliminar la liga'});
+                            return res.status(500).send({message:'Error al eliminar el jugador'});
                         }else if(playerRemoved){
-                            return res.send({message: 'La liga fue eliminada', playerRemoved});
+                            return res.send({message: 'El jugador fue eliminado', playerRemoved});
                         }else{
-                            return res.status(404).send({message:'No se pudo eliminar la liga o ya fue eliminada'});
+                            return res.status(404).send({message:'No se pudo eliminar el jugador o ya fue eliminado'});
                         }
                     })
                 }else{
-                    return res.status(500).send({message: 'No se pudo eliminar la liga del usuario'});
+                    return res.status(500).send({message: 'No se pudo eliminar el jugador del usuario'});
                 }
             }
         ).populate('players')
