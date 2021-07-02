@@ -2,15 +2,16 @@
 
 var Team = require('../models/team.model');
 var User = require('../models/user.model');
+var Player = require('../models/player.model');
 
 function createPlayer(req, res){
     let userId = req.params.id;
     let teamId = req.params.id;
     let params = req.body;
 
-    if(userId != req.user.sub){
+    /*if(userId != req.user.sub){
         return res.status(401).send({message:'No tienes permiso para crear jugadores'});
-    }else{
+    }else{*/
         if(params.name){
             params.name = params.name.toLowerCase();
             Player.findOne({name : params.name}, (err, playerFind)=>{
@@ -52,7 +53,7 @@ function createPlayer(req, res){
         }
     }
 
-}
+/*}*/
 
 function updatePlayer(req, res){
     let userId = req.params.id;
