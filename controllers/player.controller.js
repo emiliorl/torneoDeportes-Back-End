@@ -9,9 +9,9 @@ function createPlayer(req, res){
     let teamId = req.params.id;
     let params = req.body;
 
-    /*if(userId != req.user.sub){
+    if(userId != req.user.sub){
         return res.status(401).send({message:'No tienes permiso para crear jugadores'});
-    }else{*/
+    }else{
         if(params.name){
             params.name = params.name.toLowerCase();
             Player.findOne({name : params.name}, (err, playerFind)=>{
@@ -53,7 +53,7 @@ function createPlayer(req, res){
         }
     }
 
-/*}*/
+}
 
 function updatePlayer(req, res){
     let userId = req.params.id;
@@ -102,24 +102,24 @@ function deletePlayer(req, res){
     var playerId = req.params.idL;
 
     if(userId != req.user.sub){
-        return res.status(400).send({message:'No posees permisos para eliminar la liga'});
+        return res.status(400).send({message:'No posees permisos para eliminar el jugador'});
     }else{
         User.findOneAndUpdate({_id: userId, players: playerId},
             {$pull:{players: playerId}}, {new:true}, (err, playerPull)=>{
                 if(err){
-                    return res.status(500).send({message: 'Error general al eliminar la liga del usuario'});
+                    return res.status(500).send({message: 'Error general al eliminar el jugador del usuario'});
                 }else if(playerPull){
                     Player.findByIdAndRemove({_id: playerId},(err, playerRemoved) => {
                         if(err){
-                            return res.status(500).send({message:'Error al eliminar la liga'});
+                            return res.status(500).send({message:'Error al eliminar el jugador'});
                         }else if(playerRemoved){
-                            return res.send({message: 'La liga fue eliminada', playerRemoved});
+                            return res.send({message: 'El jugador fue eliminada', playerRemoved});
                         }else{
-                            return res.status(404).send({message:'No se pudo eliminar la liga o ya fue eliminada'});
+                            return res.status(404).send({message:'No se pudo eliminar el jugador o ya fue eliminado'});
                         }
                     })
                 }else{
-                    return res.status(500).send({message: 'No se pudo eliminar la liga del usuario'});
+                    return res.status(500).send({message: 'No se pudo eliminar el jugador del usuario'});
                 }
             }
         ).populate('players')
