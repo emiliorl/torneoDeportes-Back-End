@@ -149,7 +149,7 @@ function createMatch(req, res){
 function listMatches(req, res){
     let idLeague = req.params.idLeague;
 
-    Match.find({league: idLeague}).populate("teams").sort({"date": "asc"}).exec((err, matchFind)=>{
+    Match.find({league: idLeague}).populate("teams").populate("location", "city -_id").sort({"date": "asc"}).exec((err, matchFind)=>{
         if(err){
             return res.status(500).send({message: 'Error general al obtener los partidos'});
         }else if(matchFind){
@@ -320,7 +320,7 @@ function listMatches(req, res){
             var leagueId = req.params.idLeague;
             let update = req.body;
         
-                if(update.date && update.location){
+                if(update.daten){
                     Match.findById(matchId, (err, matchFind)=>{
                         if(err){
                             return res.status(500).send({message: 'Error general al actualizar'});
@@ -351,7 +351,11 @@ function listMatches(req, res){
              }
         }
 
-        
+        function results(req,res){
+            var idMatch = req.params.idMatch;
+            var idTeams = req.params.idTeams;
+            
+        }
         
 
 module.exports = {
