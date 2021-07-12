@@ -319,19 +319,20 @@ function listMatches(req, res){
             var matchId = req.params.idMatch;
             var leagueId = req.params.idLeague;
             let update = req.body;
+            /*let valor = team.points;*/
         
-                if(update.daten){
+                if(update.date){
                     Match.findById(matchId, (err, matchFind)=>{
                         if(err){
-                            return res.status(500).send({message: 'Error general al actualizar'});
+                            return res.status(500).send({message: 'Error generl al buscar al partido'});
                         }else if(matchFind){
-                            League.findOne({_id: leagueId, match: matchId}, (err, leagueFind)=>{
+                            League.findOne({_id: leagueId, matches: matchId}, (err, leagueFind)=>{
                                 if(err){
                                     return res.status(500).send({message: 'Error general'});
                                 }else if(leagueFind){
                                     Match.findByIdAndUpdate(matchId, update, {new: true}, (err, matchUpdated)=>{
                                         if(err){
-                                            return res.status(500).send({message: 'Error general en la actualización'});
+                                            return res.status(500).send({message: 'Error general en la actualización'+ err});
                                         }else if(matchUpdated){
                                             return res.send({message: 'Match actualizado', matchUpdated});
                                         }else{
@@ -353,8 +354,39 @@ function listMatches(req, res){
 
         function results(req,res){
             var idMatch = req.params.idMatch;
-            var idTeams = req.params.idTeams;
-            
+            var idUser = req.params.idUser;
+            let params = req.body;
+            /*Con un if(si gana uno), else (empate), else if(si gana dos)
+            Ingresar dos parametros,variables: "team0" y "team1" 
+            numero de goles sea mayor a 0 
+            hacer una suma para los puntos, verificar quien tiene mas puntos
+            Al equipo ganador se le da 3 puntos, empate 1 punto para ambos, perdedor ninguno
+            Un actualizar donde busca el equipo y se pone el id, para que lo busque
+            Asignar un valor que diga puntaje que el valor que tiene actualmente + el valor que tenga cada uno(para el actualizar)
+            */
+           /*
+           actulizar solo la fecha
+           */
+          /*
+            function results(req,res){
+            var idMatch = req.params.idMatch;
+            var idUser = req.params.idUser;
+            let params = req.body;
+            var teamA = Number;
+            var teamB = Number;
+            var count = 0;
+
+            if(teamA > teamB){
+                teamA = 3
+            }else if(teamB > teamA){
+                teamB = 3
+            }else if(teamA = teamB){
+                teamA && teamB = 1
+            }else{
+                teamA && teamB = 0
+            }
+          */
+
         }
         
 
