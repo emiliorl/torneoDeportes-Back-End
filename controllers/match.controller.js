@@ -113,7 +113,7 @@ function createMatch(req, res){
                                 matchN.push([verify[count],x+1])
                                 matchItem.teams = verify[count];
                                 matchDate.setDate(today.getDate() + x)
-                                matchItem.date = matchDate.toLocaleDateString();;
+                                matchItem.date = matchDate.toLocaleDateString();
                                 matchItem.league = leagueFind._id;
                                 matchItem.location = verify[count][0]
                                 matchItem.save((err, matchSaved) => {
@@ -149,7 +149,7 @@ function createMatch(req, res){
 function listMatches(req, res){
     let idLeague = req.params.idLeague;
 
-    Match.find({league: idLeague}).populate("teams").populate("location", "city -_id").sort({"date": "asc"}).exec((err, matchFind)=>{
+    Match.find({league: idLeague}).populate("teams").populate("location").sort({"date": "asc"}).exec((err, matchFind)=>{
         if(err){
             return res.status(500).send({message: 'Error general al obtener los partidos'});
         }else if(matchFind){
@@ -324,15 +324,18 @@ function listMatches(req, res){
                 if(update.date){
                     Match.findById(matchId, (err, matchFind)=>{
                         if(err){
-                            return res.status(500).send({message: 'Error generl al buscar al partido'});
+                            return res.status(500).send({message: 'Error general al buscar los partidos'});
                         }else if(matchFind){
-                            League.findOne({_id: leagueId, matches: matchId}, (err, leagueFind)=>{
+                            League.findOne({_id: leagueId}, (err, leagueFind)=>{
                                 if(err){
                                     return res.status(500).send({message: 'Error general'});
                                 }else if(leagueFind){
+                                    var updateDate = new Date(update.date)
+                                    updateDate.setDate(updateDate.getDate()+1)
+                                    update.date = updateDate.toLocaleDateString()
                                     Match.findByIdAndUpdate(matchId, update, {new: true}, (err, matchUpdated)=>{
                                         if(err){
-                                            return res.status(500).send({message: 'Error general en la actualización'+ err});
+                                            return res.status(500).send({message: 'Error general en la actualización'+err});
                                         }else if(matchUpdated){
                                             return res.send({message: 'Match actualizado', matchUpdated});
                                         }else{
@@ -367,6 +370,8 @@ function listMatches(req, res){
            /*
            actulizar solo la fecha
            */
+          /*Boton a la par de editar que diga como resultado
+          */
           /*
             function results(req,res){
             var idMatch = req.params.idMatch;
