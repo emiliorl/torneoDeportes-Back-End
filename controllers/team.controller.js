@@ -16,22 +16,14 @@ function createTeam(req, res){
 
     if(userId != req.user.sub){
         return res.status(400).send({message:'No posees permisos para hacer esta accion'});
-    }else{
-        Team.find({}, (err, teamsFind)=>{
-            if(err){
-                return res.status(500).send({message: 'Error general al buscar los equipos'});
-            }else if(teamsFind){
-                if(teamsFind.length <= 9){
-                    
-                }else{
-                    return res.status(500).send({message: 'La cantidad de equipos esta en el limite'});
-                }
-            }
-        });
+    }else{        
         League.findOne({_id: leagueId, user: userId}, (err, leagueFind)=>{
             if(err){
                 return res.status(500).send({message: 'Error general al buscar la liga'});
-            }else if(leagueFind){
+            
+            }else if(leagueFind.teams.length >=10){
+                return res.status(400).send({message:'Ya se cumplio el limite de los equipos'});
+            }else if(leagueFind){   
                 Team.findOne({nameTeam : params.nameTeam}, (err, teamFind)=>{
                     if(err){
                         return res.status(400).send({message:'Error general al buscar el equipo con dicho nombre'});
