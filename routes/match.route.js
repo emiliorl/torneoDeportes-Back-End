@@ -10,5 +10,6 @@ api.post('/:idUser/:idLeague/createMatches', mdAuth.ensureAuth, matchController.
 api.get('/:idLeague/listMatches', matchController.listMatches);
 api.put('/:idMatch/:idLeague/updateMatch', mdAuth.ensureAuth, matchController.updateMatch);
 api.post('/search', mdAuth.ensureAuth, matchController.searchMatch);
-
+api.put('/:idUser/:idLeague/:idMatch/results', mdAuth.ensureAuth, matchController.results);
+ 
 module.exports = api;

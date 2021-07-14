@@ -3,6 +3,7 @@
 var User = require('../models/user.model');
 var League = require('../models/league.model');
 var Match = require('../models/match.model');
+var Team = require('../models/team.model');
 
 function createMatch(req, res){
     var userId = req.params.idUser;
@@ -319,8 +320,8 @@ function listMatches(req, res){
             var matchId = req.params.idMatch;
             var leagueId = req.params.idLeague;
             let update = req.body;
-            /*let valor = team.points;*/
         
+
                 if(update.date){
                     Match.findById(matchId, (err, matchFind)=>{
                         if(err){
@@ -356,48 +357,123 @@ function listMatches(req, res){
         }
 
         function results(req,res){
-            var idMatch = req.params.idMatch;
-            var idUser = req.params.idUser;
-            let params = req.body;
-            /*Con un if(si gana uno), else (empate), else if(si gana dos)
-            Ingresar dos parametros,variables: "team0" y "team1" 
-            numero de goles sea mayor a 0 
-            hacer una suma para los puntos, verificar quien tiene mas puntos
-            Al equipo ganador se le da 3 puntos, empate 1 punto para ambos, perdedor ninguno
-            Un actualizar donde busca el equipo y se pone el id, para que lo busque
-            Asignar un valor que diga puntaje que el valor que tiene actualmente + el valor que tenga cada uno(para el actualizar)
-            */
-           /*
-           actulizar solo la fecha
-           */
-          /*Boton a la par de editar que diga como resultado
-          */
-          /*
-            function results(req,res){
-            var idMatch = req.params.idMatch;
-            var idUser = req.params.idUser;
-            let params = req.body;
-            var teamA = Number;
-            var teamB = Number;
-            var count = 0;
+                let params = req.body;
+                let idLeague = req.params.idLeague;
+                let match = new Match();
 
-            if(teamA > teamB){
-                teamA = 3
-            }else if(teamB > teamA){
-                teamB = 3
-            }else if(teamA = teamB){
-                teamA && teamB = 1
-            }else{
-                teamA && teamB = 0
-            }
-          */
-
+                if ( params.teamId && params.goals && params.winner && params.loser) {
+                    if(params.team == params.teamId) return res.status(500).send({ message:'No se pueden poner dos equipos iguales'})
+                    if(params.points < 0 || params.points < 0) return res.status(500).send({ message:'No se pueden ingresar valores negativos en los goles'})
+                    League.find({ _id: idLeague }).exec((err, leagueFound) => {
+                        if (err) return res.status(500).send({ message: 'Error en la petición buscar liga' })
+                        if (leagueFound.length <= 0) return res.status(404).send({ message: 'No se encontro la liga' })
+                        if (leagueFound) {
+                            Team.find({ _id: params.teamId }).exec((err, teamFound) => {
+                                if (err) return res.status(500).send({ message: 'Error en la petición buscar Team' })
+                                if (teamFound.length <= 0) return res.status(404).send({ message: 'No se encontro el Team'})
+                                if (teamFound) {
+                                    Team.find({ _id: params.team }).exec((err, teamFound) => {
+                                        if (err) return res.status(500).send({ message: 'Error en la petición buscar Team B' })
+                                        if (teamFound) {
+                                            match.goals = params.goals;
+                                            match.teamId = params.teamId;
+                                            match.winner = params.winner;
+                                            match.loser = params.loser;
+                                            Match.findByIdAndUpdate((err, matchSaved) => {
+                                                if (err) return res.status(500).send({ message: 'Error al guardar match' })
+                                                if (matchSaved) {
+                                                    if (params.teamA > params.teamB) {
+                                                        Match.findByIdAndUpdate(params.teamId, { $inc: { teamA: 3, teamB: 0} }, (err, teamAUpdated) => {
+                                                            if (err) return res.status(500).send({ message: 'error en la peticion actualizar team A' })
+                                                            if (teamAUpdated) {
+                                                                Team.findByIdAndUpdate(params.teamId, { $inc: { teamA: 3, teamB: 0} }, (err, team2Updated) => {
+                                                                    if (err) return res.status(500).send({ message: 'error en la peticion actualizar' })
+                                                                    if (!team2Updated) return res.status(500).send({ message: 'error guardar update' })
+                                                                })
+                                                            }
+            
+                                                        })
+                                                    }
+                                                    if (params.teamA < params.teamB) {
+                                                        Match.findByIdAndUpdate(params.teamId, { $inc: { teamA: 0, teamB: 3} }, (err, teamBUpdated) => {
+                                                            if (err) return res.status(500).send({ message: 'error en la peticion actualizar team B' })
+                                                            if (teamBUpdated) {
+                                                                Team.findByIdAndUpdate(params.teamId, { $inc: { teamA: 0, teamB: 3} }, (err, teamAUpdated) => {
+                                                                    if (err) return res.status(500).send({ message: 'error en la peticion actualizar team A' })
+                                                                    if (!teamAUpdated) return res.status(500).send({ message: 'error guardar update team A' })
+                                                                })
+                                                            }
+            
+                                                        })
+                                                    }
+                                                    if (params.teamA == params.teamB) {
+                                                        Match.findByIdAndUpdate(params.teamId, { $inc: { teamA: 1, teamB: 1} }, (err, teamAUpdated) => {
+                                                            if (err) return res.status(500).send({ message: 'error en la peticion actualizar' })
+                                                            if (teamAUpdated) {
+                                                                Team.findByIdAndUpdate(params.teamId, { $inc: { points: 1 } }, (err, teamBUpdated) => {
+                                                                    if (err) return res.status(500).send({ message: 'error en la peticion actualizar'})
+                                                                    if (!teamBUpdated) return res.status(500).send({ message: 'error al guardar el team B' })
+            
+                                                                })
+            
+                                                                
+            
+            
+                                                            } else {
+                                                                return res.status(500).send({ message: 'error en guardar' })
+                                                            }
+            
+                                                        })
+                                                    }
+                                                    return res.status(200).send({matchSaved})
+            
+                                                } else {
+                                                    return res.status(500).send({ message: 'No se guardo match' })
+                                                }
+                                            })
+                                        } else {
+                                            return res.status(500).send({ message: 'No se encontro TeamB' })
+                                        }
+                                    })
+            
+                                } else {
+                                    return res.status(500).send({ message: 'No se encontro TeamA' })
+                                }
+                            })
+                        } else {
+                            return res.status(500).send({ message: 'No se encontro liga con ese id' })
+                        }
+            
+                    })
+            
+            
+                } else {
+                    return res.status(500).send({ message: 'Ingrese todos los parametros que se solicitan' })
+                }
+            
         }
-        
+
 
 module.exports = {
     createMatch,
     listMatches,
     updateMatch,
-    searchMatch
+    searchMatch,
+    results
 }
+
+
+
+/*if(teamA > teamB){
+                teamA = 3
+                teamB = 0
+            }else if(teamB > teamA){
+                teamB = 3
+                teamA = 0
+            }else if(teamA = teamB){
+                teamA = 1
+                teamB = 1
+            }else{
+                teamA = 0
+                teamB = 0
+        }*/
