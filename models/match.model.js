@@ -8,6 +8,7 @@ var matchSchema = Schema({
     goals: [{type: Number}],
     winner: {type: Schema.ObjectId, ref: "team"}, 
     loser: {type: Schema.ObjectId, ref: "team"},
+    draw: {type: Boolean, default: false},
     league: {type: Schema.ObjectId, ref: "league"},
     location: {type: Schema.ObjectId, ref: "team"},
     date: Date

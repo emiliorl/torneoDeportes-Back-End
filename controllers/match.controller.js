@@ -139,7 +139,7 @@ function createMatch(req, res){
                         }
                     }
                 }
-                return res.send({message: leagueFind})
+                return res.send({message: 'Partidos creados Exitosamente', leagueFind})
             }else{
                 return res.status(404).send({message:'No se encontro la liga'});
             }
@@ -462,7 +462,7 @@ function listMatches(req, res){
         if(userId != req.user.sub){
             return res.status(404).send({message:'No tienes permiso para actualizar el partido'});
         }else{
-            if(update.team1 && update.team2){
+            if((update.team1 && update.team2) || (!update.team1 && update.team2) || (update.team1 && !update.team2) || (!update.team1 && !update.team2)){
                 League.findOne({_id: leagueId, user: userId}, (err, leagueFind) => {
                     if(err){
                         return res.status(500).send({message:'Error general al buscar liga'});
@@ -471,9 +471,203 @@ function listMatches(req, res){
                             if(err){
                                 return res.status(500).send({message:'Error general al buscar la partida'});
                             }else if(matchFind && matchFind.goals.length != 0 ){
-                                return res.status(404).send({message:'No se pudede actualizar la partida desde aqui'});
+                                if(matchFind.goals[0] > matchFind.goals[1]){
+                                    Match.findByIdAndUpdate(matchId, {winner: null, loser:null},{new: true}, (err, matchUpdateWinner) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el ganador del partido'});
+                                        }else if(matchUpdateWinner){
+                                            /* return res.status(200).send({message:'Ganador actualizado', matchUpdateWinner}); */
+                                        }else{
+                                            return res.status(404).send({message:'No se pudo actualizar al ganador'});
+                                        }
+                                    })
+                                    Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{goalsInFavor:-matchFind.goals[1], goalsAgainst:-matchFind.goals[0], matchPlayed: -1}}).exec((err, teamUpdate) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                        }else if(teamUpdate){
+/*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+*/                                                }else{
+                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                        }
+                                    })
+                                    Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: -3,goalsInFavor:-matchFind.goals[0], goalsAgainst:-matchFind.goals[1], matchPlayed: -1}}).exec((err, teamUpdate) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                        }else if(teamUpdate){
+/*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+*/                                                }else{
+                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                        }
+                                    })
+                                }else if(matchFind.goals[0] < matchFind.goals[1]){
+                                    Match.findByIdAndUpdate(matchId, {winner: null, loser:null},{new: true}, (err, matchUpdateWinner) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el ganador del partido'});
+                                        }else if(matchUpdateWinner){
+                                            /* return res.status(200).send({message:'Ganador actualizado', matchUpdateWinner}); */
+                                        }else{
+                                            return res.status(404).send({message:'No se pudo actualizar al ganador'});
+                                        }
+                                    })
+                                    Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{goalsInFavor:-matchFind.goals[0], goalsAgainst:-matchFind.goals[1], matchPlayed: -1}}).exec((err, teamUpdate) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                        }else if(teamUpdate){
+/*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+*/                                                }else{
+                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                        }
+                                    })
+                                    Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: -3,goalsInFavor:-matchFind.goals[1],goalsAgainst:-matchFind.goals[0], matchPlayed: -1}}).exec((err, teamUpdate) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                        }else if(teamUpdate){
+/*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+*/                                                }else{
+                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                        }
+                                    })
+                                }else if(matchFind.goals[0] == matchFind.goals[1]){
+                                    Match.findByIdAndUpdate(matchId, {winner: null, loser:null, draw: true},{new: true}, (err, matchUpdateWinner) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el ganador del partido'});
+                                        }else if(matchUpdateWinner){
+                                            /* return res.status(200).send({message:'Ganador actualizado', matchUpdateWinner}); */
+                                        }else{
+                                            return res.status(404).send({message:'No se pudo actualizar al ganador'});
+                                        }
+                                    })
+                                    Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: -1,goalsInFavor:-matchFind.goals[0],goalsAgainst:-matchFind.goals[1], matchPlayed: -1}}).exec((err, teamUpdate) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                        }else if(teamUpdate){
+                                            /* return res.status(200).send({message:'Equipo actualizado', teamUpdate}); */
+                                        }else{
+                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                        }
+                                    })
+                                    Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: -1,goalsInFavor:-matchFind.goals[1],goalsAgainst:-matchFind.goals[0], matchPlayed: -1}}).exec((err, teamUpdate) => {
+                                        if(err){
+                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                        }else if(teamUpdate){
+/*                                                     return res.status(200).send({message:'Equipos actualizados', teamUpdate});
+*/                                                }else{
+                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                        }
+                                    })
+                                } 
+                                Match.findByIdAndUpdate(matchId, {$set:{goals:[]}}, {new: true}).exec((err, matchUpdate) => {
+                                    if(err){
+                                        return res.status(500).send({message:'Error genaral al actualizar el partido'});
+                                    }else if(matchUpdate){
+                                        Match.findByIdAndUpdate(matchId, {$push:{goals: [update.team1, update.team2]}}, {new: true}).exec((err, matchUpdate) => {
+                                            if(err){
+                                                return res.status(500).send({message:'Error genaral al actualizar el partido'});
+                                            }else if(matchUpdate){
+        /*                                         return res.status(200).send({message:'Partido actualizado', matchUpdate});
+        */                                       if(update.team1 > update.team2){
+                                                    Match.findByIdAndUpdate(matchId, {winner: matchFind.teams[0], loser:matchFind.teams[1]},{new: true}, (err, matchUpdateWinner) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el ganador del partido'});
+                                                        }else if(matchUpdateWinner){
+                                                            /* return res.status(200).send({message:'Ganador actualizado', matchUpdateWinner}); */
+                                                        }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar al ganador'});
+                                                        }
+                                                    })
+                                                    Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{goalsInFavor:update.team2, goalsAgainst:update.team1, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                        }else if(teamUpdate){
+        /*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+         */                                                }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                        }
+                                                    })
+                                                    Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: 3,goalsInFavor:update.team1, goalsAgainst:update.team2, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                        }else if(teamUpdate){
+        /*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+         */                                                }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                        }
+                                                    })
+                                                    Match.findById(matchId).exec((err,FinalMatch)=>{
+                                                        return res.status(200).send({message:'Partido actualizado', FinalMatch});
+                                                    })
+                                                }else if(update.team1 < update.team2){
+                                                    Match.findByIdAndUpdate(matchId, {winner: matchFind.teams[1], loser:matchFind.teams[0]},{new: true}, (err, matchUpdateWinner) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el ganador del partido'});
+                                                        }else if(matchUpdateWinner){
+                                                            /* return res.status(200).send({message:'Ganador actualizado', matchUpdateWinner}); */
+                                                        }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar al ganador'});
+                                                        }
+                                                    })
+                                                    Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{goalsInFavor:update.team1, goalsAgainst:update.team2, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                        }else if(teamUpdate){
+        /*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+         */                                                }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                        }
+                                                    })
+                                                    Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: 3,goalsInFavor:update.team2,goalsAgainst:update.team1, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                        }else if(teamUpdate){
+        /*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+         */                                                }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                        }
+                                                    })
+                                                    Match.findById(matchId).exec((err,FinalMatch)=>{
+                                                        return res.status(200).send({message:'Partido actualizado', FinalMatch});
+                                                    })
+                                                }else if(update.team1 == update.team2){
+                                                    Match.findByIdAndUpdate(matchId, {winner: null, loser:null, draw: true},{new: true}, (err, matchUpdateWinner) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el ganador del partido'});
+                                                        }else if(matchUpdateWinner){
+                                                            /* return res.status(200).send({message:'Ganador actualizado', matchUpdateWinner}); */
+                                                        }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar al ganador'});
+                                                        }
+                                                    })
+                                                    Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: 1,goalsInFavor:update.team1,goalsAgainst:update.team2, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                        }else if(teamUpdate){
+                                                            /* return res.status(200).send({message:'Equipo actualizado', teamUpdate}); */
+                                                        }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                        }
+                                                    })
+                                                    Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: 1,goalsInFavor:update.team2,goalsAgainst:update.team1, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                        if(err){
+                                                            return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                        }else if(teamUpdate){
+        /*                                                     return res.status(200).send({message:'Equipos actualizados', teamUpdate});
+         */                                                }else{
+                                                            return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                        }
+                                                    })
+                                                    Match.findById(matchId).exec((err,FinalMatch)=>{
+                                                        return res.status(200).send({message:'Partido actualizado', FinalMatch});
+                                                    })
+                                                }   
+                                            }else{
+                                                return res.status(404).send({message:'No se pudo actualizar el partido'});
+                                            }
+                                        })
+                                    }else{
+                                        return res.status(404).send({message:'No se pudo actualizar el partido'});
+                                    }
+                                })
                             }else if(matchFind){
-                                
                                 Match.findByIdAndUpdate(matchId, {$push:{goals: [update.team1, update.team2]}}, {new: true}).exec((err, matchUpdate) => {
                                     if(err){
                                         return res.status(500).send({message:'Error genaral al actualizar el partido'});
@@ -489,7 +683,16 @@ function listMatches(req, res){
                                                     return res.status(404).send({message:'No se pudo actualizar al ganador'});
                                                 }
                                             })
-                                            Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: 3}}).exec((err, teamUpdate) => {
+                                            Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{goalsInFavor:update.team2, goalsAgainst:update.team1, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                if(err){
+                                                    return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                }else if(teamUpdate){
+/*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+ */                                                }else{
+                                                    return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                }
+                                            })
+                                            Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: 3,goalsInFavor:update.team1, goalsAgainst:update.team2, matchPlayed: 1}}).exec((err, teamUpdate) => {
                                                 if(err){
                                                     return res.status(500).send({message:'Error genaral al actualizar el equipo'});
                                                 }else if(teamUpdate){
@@ -511,7 +714,16 @@ function listMatches(req, res){
                                                     return res.status(404).send({message:'No se pudo actualizar al ganador'});
                                                 }
                                             })
-                                            Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: 3}}).exec((err, teamUpdate) => {
+                                            Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{goalsInFavor:update.team1, goalsAgainst:update.team2, matchPlayed: 1}}).exec((err, teamUpdate) => {
+                                                if(err){
+                                                    return res.status(500).send({message:'Error genaral al actualizar el equipo'});
+                                                }else if(teamUpdate){
+/*                                                     return res.status(200).send({message:'Equipo actualizado', teamUpdate});
+ */                                                }else{
+                                                    return res.status(404).send({message:'No se pudo actualizar el equipo'});
+                                                }
+                                            })
+                                            Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: 3,goalsInFavor:update.team2,goalsAgainst:update.team1, matchPlayed: 1}}).exec((err, teamUpdate) => {
                                                 if(err){
                                                     return res.status(500).send({message:'Error genaral al actualizar el equipo'});
                                                 }else if(teamUpdate){
@@ -524,7 +736,7 @@ function listMatches(req, res){
                                                 return res.status(200).send({message:'Partido actualizado', FinalMatch});
                                             })
                                         }else if(update.team1 == update.team2){
-                                            Match.findByIdAndUpdate(matchId, {winner: null, loser:null},{new: true}, (err, matchUpdateWinner) => {
+                                            Match.findByIdAndUpdate(matchId, {winner: null, loser:null, draw: true},{new: true}, (err, matchUpdateWinner) => {
                                                 if(err){
                                                     return res.status(500).send({message:'Error genaral al actualizar el ganador del partido'});
                                                 }else if(matchUpdateWinner){
@@ -533,7 +745,7 @@ function listMatches(req, res){
                                                     return res.status(404).send({message:'No se pudo actualizar al ganador'});
                                                 }
                                             })
-                                            Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: 1}}).exec((err, teamUpdate) => {
+                                            Team.findByIdAndUpdate(matchFind.teams[0], {$inc:{points: 1,goalsInFavor:update.team1,goalsAgainst:update.team2, matchPlayed: 1}}).exec((err, teamUpdate) => {
                                                 if(err){
                                                     return res.status(500).send({message:'Error genaral al actualizar el equipo'});
                                                 }else if(teamUpdate){
@@ -542,7 +754,7 @@ function listMatches(req, res){
                                                     return res.status(404).send({message:'No se pudo actualizar el equipo'});
                                                 }
                                             })
-                                            Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: 1}}).exec((err, teamUpdate) => {
+                                            Team.findByIdAndUpdate(matchFind.teams[1], {$inc:{points: 1,goalsInFavor:update.team2,goalsAgainst:update.team1, matchPlayed: 1}}).exec((err, teamUpdate) => {
                                                 if(err){
                                                     return res.status(500).send({message:'Error genaral al actualizar el equipo'});
                                                 }else if(teamUpdate){

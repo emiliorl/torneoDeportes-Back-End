@@ -13,6 +13,9 @@ var teamSchema = Schema({
     city : String,
     imageTeam : String,
     points: {type: Number, default: 0},
+    goalsInFavor: {type: Number, default: 0},
+    goalsAgainst: {type: Number, default: 0},
+    matchPlayed: {type: Number, default: 0},
     league : {type: Schema.ObjectId, ref: "league"},
     players : {type: Schema.ObjectId, ref: "player"}
 });
