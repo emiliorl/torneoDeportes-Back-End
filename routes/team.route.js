@@ -8,9 +8,9 @@ var upload = connectMultiparty({ uploadDir: './uploads/teams'});
 
 var api = express.Router();
 
-api.post('/:userId/createTeam/:leagueId', [mdAuth.ensureAuth, mdAuth.validRolAdmin], teamController.createTeam);
-api.put('/:userId/updateTeam/:leagueId/:teamId', [mdAuth.ensureAuth, mdAuth.validRolAdmin], teamController.updateTeam);
-api.post('/:userId/deleteTeam/:leagueId/:teamId', [mdAuth.ensureAuth, mdAuth.validRolAdmin], teamController.deleteTeam);
+api.post('/:userId/createTeam/:leagueId', mdAuth.ensureAuth, teamController.createTeam);
+api.put('/:userId/updateTeam/:leagueId/:teamId', mdAuth.ensureAuth, teamController.updateTeam);
+api.post('/:userId/deleteTeam/:leagueId/:teamId', mdAuth.ensureAuth, teamController.deleteTeam);
 api.get('/:idLeague/listTeams', teamController.listTeam);
 api.get('/:teamId/getTeam', teamController.getTeamById);
 api.post('/getTeam', teamController.getTeam);

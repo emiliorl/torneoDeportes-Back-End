@@ -2,6 +2,7 @@
 
 var User = require('../models/user.model');
 var League = require('../models/league.model');
+var bcrypt = require('bcrypt-nodejs');
 
 var fs = require('fs');
 var path = require('path');
@@ -23,7 +24,9 @@ function createLeague(req, res){
                 }else{
                     let league = new League();
                     league.nameLeague = params.nameLeague;
-                    league.startingDate = params.startingDate;
+                    var startingDateFormat = new Date(params.startingDate)
+                    startingDateFormat.setDate(startingDateFormat.getDate()+1)
+                    league.startingDate = startingDateFormat.toLocaleDateString()
                     league.user = userId;
                     league.share = params.share;
                     league.save((err, leagueSaved) => {
@@ -55,29 +58,50 @@ function createLeague(req, res){
 function deleteLeague(req, res){
     var userId = req.params.id;
     var leagueId = req.params.idL;
+    var params = req.body;
 
     if(userId != req.user.sub){
         return res.status(400).send({message:'No posees permisos para eliminar la liga'});
     }else{
-        User.findOneAndUpdate({_id: userId},
-            {$pull:{leagues: leagueId}}, {new:true}, (err, leaguePull)=>{
+        if(params.password){
+            User.findById(userId, (err, userFind) => {
                 if(err){
-                    return res.status(500).send({message: 'Error general al eliminar la liga del usuario'});
-                }else if(leaguePull){
-                    League.findByIdAndRemove({_id: leagueId},(err, leagueRemoved) => {
+                    return res.status(500).send({message:'Error al buscar equipo'});
+                }else if(userFind){
+                    bcrypt.compare(params.password, userFind.password, (err, equalsPassword) => {
                         if(err){
-                            return res.status(500).send({message:'Error al eliminar la liga'});
-                        }else if(leagueRemoved){
-                            return res.send({message: 'La liga fue eliminada', leagueRemoved});
+                            return res.status(500).send({message:'Error al comparar contraseñas'});
+                        }else if(equalsPassword){
+                            User.findOneAndUpdate({_id: userId},
+                                {$pull:{leagues: leagueId}}, {new:true}, (err, leaguePull)=>{
+                                    if(err){
+                                        return res.status(500).send({message: 'Error general al eliminar la liga del usuario'});
+                                    }else if(leaguePull){
+                                        League.findByIdAndRemove({_id: leagueId},(err, leagueRemoved) => {
+                                            if(err){
+                                                return res.status(500).send({message:'Error al eliminar la liga'});
+                                            }else if(leagueRemoved){
+                                                return res.send({message: 'La liga fue eliminada', leagueRemoved});
+                                            }else{
+                                                return res.status(404).send({message:'No se pudo eliminar la liga o ya fue eliminada'});
+                                            }
+                                        })
+                                    }else{
+                                        return res.status(500).send({message: 'No se pudo eliminar la liga del usuario'});
+                                    }
+                                }
+                            ).populate('leagues')
                         }else{
-                            return res.status(404).send({message:'No se pudo eliminar la liga o ya fue eliminada'});
+                            return res.status(404).send({message:'No hay coincidencias en la password'});
                         }
                     })
                 }else{
-                    return res.status(500).send({message: 'No se pudo eliminar la liga del usuario'});
+                    return res.status(404).send({message:'No se encontro el usuario'});
                 }
-            }
-        ).populate('leagues')
+            })                        
+        }else{
+            return res.status(400).send({message:'No olvides colocar tu password'});
+        }
     }
 }
 
@@ -89,6 +113,11 @@ function updateLeague(req, res){
     if(userId != req.user.sub){
         return res.status(404).send({message:'No tienes permiso para actualizar este servicio'});
     }else{
+        if(update.startingDate){
+            var startingDateFormat = new Date(update.startingDate)
+            startingDateFormat.setDate(startingDateFormat.getDate()+1)
+            update.startingDate = startingDateFormat.toLocaleDateString()
+        }
         if(update.nameLeague){
             update.nameLeague = update.nameLeague.toLowerCase();
 
@@ -140,10 +169,11 @@ function listLeagues(req,res){
 function listMyLeagues(req,res){
     let userId = req.params.id;
 
-    League.find({user: userId}).select("-__v").exec((err, leagueFind)=>{
+    League.find({user: userId}).populate('user').select("-__v").exec((err, leagueFind)=>{
         if(err){
             return res.status(500).send({message: 'Error general al obtener las ligas'});
         }else if(leagueFind){
+            console.log(leagueFind)
             return res.send({message: 'Ligas encontradas', leagueFind});
         }else{
             return res.status(404).send({message:'No se encontraron ligas'});

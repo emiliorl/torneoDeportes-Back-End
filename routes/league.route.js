@@ -8,7 +8,7 @@ var upload = connectMultiparty({ uploadDir: './uploads/leagues'});
 
 var api = express.Router();
 
-api.post('/:id/createLeague', [mdAuth.ensureAuth], leagueController.createLeague);
+api.post('/:id/createLeague', mdAuth.ensureAuth, leagueController.createLeague);
 api.put('/:id/updateLeague/:idL', [mdAuth.ensureAuth], leagueController.updateLeague);
 api.post('/:id/deleteLeague/:idL', mdAuth.ensureAuth, leagueController.deleteLeague);
 api.get('/listLeagues', leagueController.listLeagues);
